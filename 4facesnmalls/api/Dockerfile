@@ -1,37 +1,19 @@
-# Estágio de construção
-FROM node:20-alpine AS build
+# Imagem base
+FROM node:20-alpine
 
 WORKDIR /app
 
 # Copiar arquivos de definição de pacotes
 COPY package*.json ./
 
-# Instalar dependências
-RUN npm ci
+# Instalar todas as dependências, incluindo devDependencies
+RUN npm install
 
 # Copiar código fonte
 COPY . .
 
-# Compilar typescript diretamente forçando a compilação
-RUN echo '// Dummy file para testar se compilação funcionou' > src/dummy.ts
-RUN npx tsc -p tsconfig.json --skipLibCheck --noEmitOnError
-RUN node -e "console.log('Verificando se o dist/main.js foi criado...'); if (!require('fs').existsSync('./dist/main.js')) { console.error('Arquivo main.js não encontrado!'); process.exit(1); }"
-
-# Remover pacotes de desenvolvimento
-RUN npm prune --production
-
-# Estágio de produção
-FROM node:20-alpine
-
-WORKDIR /app
-
 # Criar diretório para logs
 RUN mkdir -p /app/logs
-
-# Copiar arquivos de dependências e compilados do estágio de construção
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/package*.json ./
 
 # Expor porta
 EXPOSE 3000
@@ -39,8 +21,5 @@ EXPOSE 3000
 # Definir variáveis de ambiente
 ENV NODE_ENV=production
 
-# Usuário não-root para segurança
-USER node
-
-# Comando para iniciar a aplicação
-CMD ["node", "dist/main.js"]
+# Comando para iniciar a aplicação com ts-node
+CMD ["npx", "ts-node", "-r", "tsconfig-paths/register", "src/main.ts"]
