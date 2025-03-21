@@ -1,12 +1,12 @@
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 # Copiar arquivos de configuração
-COPY package.json package-lock.json* ./
+COPY package.json ./
 
 # Instalar dependências
-RUN npm ci
+RUN npm install
 
 # Copiar código-fonte
 COPY . .
@@ -15,7 +15,7 @@ COPY . .
 RUN npm run build
 
 # Imagem de produção
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
@@ -25,7 +25,6 @@ ENV PORT=3001
 
 # Copiar as dependências e o build
 COPY --from=builder /app/package.json .
-COPY --from=builder /app/package-lock.json* .
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
