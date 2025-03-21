@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: nmalls-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    restart: always
+    networks:
+      - nmalls-network
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: nmalls-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - PORT=3000
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017/nmalls?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+    volumes:
+      - api_logs:/app/logs
+      - api_uploads:/app/uploads
+    depends_on:
+      - mongodb
+    restart: always
+    networks:
+      - nmalls-network
+
+  admin-panel:
+    build:
+      context: ./admin-panel
+      dockerfile: Dockerfile
+    container_name: nmalls-admin-panel
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - NEXT_PUBLIC_API_URL=http://api:3000/api
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXT_PUBLIC_UPLOAD_URL=http://api:3000/uploads
+    depends_on:
+      - api
+    restart: always
+    networks:
+      - nmalls-network
+
+volumes:
+  mongodb_data:
+  api_logs:
+  api_uploads:
+
+networks:
+  nmalls-network:
+    driver: bridge 

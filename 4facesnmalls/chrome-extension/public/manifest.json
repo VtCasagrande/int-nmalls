@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Nmalls - Integração Tiny PDV",
+  "version": "1.0.0",
+  "description": "Extensão para integração entre o Tiny PDV e o sistema Nmalls",
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Nmalls"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://erp.tiny.com.br/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://erp.tiny.com.br/*"],
+      "js": ["content-script.js"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html",
+  "default_locale": "pt_BR"
+} 
