@@ -12,8 +12,10 @@ RUN npm ci
 # Copiar código fonte
 COPY . .
 
-# Compilar typescript diretamente ignorando erros
-RUN npx tsc --skipLibCheck --skipDefaultLibCheck --noEmitOnError false --outDir dist
+# Compilar typescript diretamente forçando a compilação
+RUN echo '// Dummy file para testar se compilação funcionou' > src/dummy.ts
+RUN npx tsc -p tsconfig.json --skipLibCheck --noEmitOnError
+RUN node -e "console.log('Verificando se o dist/main.js foi criado...'); if (!require('fs').existsSync('./dist/main.js')) { console.error('Arquivo main.js não encontrado!'); process.exit(1); }"
 
 # Remover pacotes de desenvolvimento
 RUN npm prune --production
