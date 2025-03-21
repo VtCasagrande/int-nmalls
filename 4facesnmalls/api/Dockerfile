@@ -1,5 +1,5 @@
 # Estágio de construção
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ RUN npm run build
 RUN npm prune --production
 
 # Estágio de produção
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
