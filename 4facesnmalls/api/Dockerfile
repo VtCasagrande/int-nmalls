@@ -12,11 +12,8 @@ RUN npm ci
 # Copiar código fonte
 COPY . .
 
-# Criar tsconfig temporário com configurações menos restritivas
-RUN echo '{"extends": "./tsconfig.json", "compilerOptions": {"skipLibCheck": true, "noEmitOnError": false}}' > tsconfig.build.temp.json
-
-# Compilar aplicação ignorando erros
-RUN npx nest build -p tsconfig.build.temp.json || true
+# Compilar typescript diretamente ignorando erros
+RUN npx tsc --skipLibCheck --skipDefaultLibCheck --noEmitOnError false --outDir dist
 
 # Remover pacotes de desenvolvimento
 RUN npm prune --production
