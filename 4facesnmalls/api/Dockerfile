@@ -16,56 +16,25 @@ COPY . .
 RUN mkdir -p /app/logs
 
 # Criar uma versão modificada do arquivo com o problema
-RUN cat > src/users/schemas/user.schema.ts << 'EOL'
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-import { ApiProperty } from '@nestjs/swagger';
+RUN cat > fix-schema.js << 'EOF'
+const fs = require('fs');
+const path = require('path');
 
-export enum UserRole {
-  ADMIN = 'admin',
-  USER = 'user',
-  DELIVERY = 'delivery',
-}
+const schemaPath = path.join(__dirname, 'src/users/schemas/user.schema.ts');
+let content = fs.readFileSync(schemaPath, 'utf8');
 
-export type UserDocument = User & Document;
+// Substituir o decorador problemático
+content = content.replace(
+  /@ApiProperty\(\{ description: ['"]Permissões do usuário['"], type: ['"]object['"] \}\)/g,
+  '@ApiProperty({ description: \'Permissões do usuário\', type: \'object\', additionalProperties: true })'
+);
 
-@Schema({ timestamps: true })
-export class User {
-  @ApiProperty({ description: 'Nome do usuário' })
-  @Prop({ required: true })
-  name: string;
+fs.writeFileSync(schemaPath, content);
+console.log('Schema file updated successfully!');
+EOF
 
-  @ApiProperty({ description: 'E-mail do usuário' })
-  @Prop({ required: true, unique: true })
-  email: string;
-
-  @ApiProperty({ description: 'Senha do usuário (hash)' })
-  @Prop({ required: true })
-  password: string;
-
-  @ApiProperty({ enum: UserRole, description: 'Papel do usuário no sistema' })
-  @Prop({ type: String, enum: UserRole, default: UserRole.USER })
-  role: UserRole;
-
-  @ApiProperty({ description: 'Permissões do usuário', type: 'object', additionalProperties: true })
-  @Prop({ type: Object, default: {} })
-  permissions: Record<string, string[]>;
-  
-  @ApiProperty({ description: 'Status do usuário (ativo/inativo)' })
-  @Prop({ default: true })
-  isActive: boolean;
-
-  @ApiProperty({ description: 'Número de telefone' })
-  @Prop()
-  phone?: string;
-  
-  @ApiProperty({ description: 'Último login do usuário' })
-  @Prop()
-  lastLogin?: Date;
-}
-
-export const UserSchema = SchemaFactory.createForClass(User);
-EOL
+# Executar o script para corrigir o schema
+RUN node fix-schema.js
 
 # Criar um script de inicialização em um local específico
 RUN echo '#!/bin/sh' > /usr/local/bin/start-app.sh && \
