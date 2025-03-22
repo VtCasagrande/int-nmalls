@@ -28,7 +28,7 @@ export class User {
   @Prop({ type: String, enum: UserRole, default: UserRole.USER })
   role: UserRole;
 
-  @ApiProperty({ description: 'Permissões do usuário', type: 'object' })
+  @ApiProperty({ description: 'Permissões do usuário', type: 'object', additionalProperties: true })
   @Prop({ type: Object, default: {} })
   permissions: Record<string, string[]>;
   
